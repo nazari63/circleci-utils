@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "github-cli"
+version = "0.1.0"
+description = "Utility to interact with github from circleci."
+authors = ["raffaele-oplabs <raffaele@oplabs.co>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+typer = "^0.13.1"
+pygithub = "^2.5.0"
+python-dateutil = "^2.9.0.post0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+github-cli = "github_cli.main:app"
