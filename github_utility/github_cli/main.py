@@ -118,7 +118,7 @@ def cli_get_pr_comments(
         github = Github(github_token)
         comment_ids = get_comments_ids(
             github, repo, pr_number, message_substring, user_type)
-        typer.echo(f"Matching comment IDs: {comment_ids}")
+        typer.echo(",".join(map(str, comment_ids)))
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)
