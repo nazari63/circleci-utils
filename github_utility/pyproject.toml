@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10"
 typer = "^0.13.1"
 pygithub = "^2.5.0"
 python-dateutil = "^2.9.0.post0"
