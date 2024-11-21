@@ -3,10 +3,11 @@ from github import Github
 from typing import Optional  # Import Optional for type hinting
 from github_cli.commands import (
     post_pr_comment,
+    delete_pr_comment,
     process_issues,
     process_pull_requests,
     get_comments_ids,
-    get_pr_base_sha
+    get_pr_base_sha,
 )
 app = typer.Typer(help="CLI tool for GitHub operations.")
 
@@ -30,6 +31,30 @@ def cli_post_pr_comment(
         github = Github(github_token)
         result = post_pr_comment(
             github, repo, pr_number, comment_body, comment_id)
+        typer.echo(result)
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command("delete-pr-comment")
+def cli_delete_pr_comment(
+    github_token: str = typer.Option(...,
+                                     help="GitHub token with permissions to comment."),
+    repo: str = typer.Option(...,
+                             help="GitHub repository in the format 'owner/repo'."),
+    pr_number: int = typer.Option(..., help="Pull request number."),
+    comment_id: int = typer.Option(
+        None,
+        "--comment-id",
+        help="ID of the comment to delete."
+    ),
+):
+    """Delete a comment with provided comment id on a pull request."""
+    try:
+        github = Github(github_token)
+        result = delete_pr_comment(
+            github, repo, pr_number, comment_id)
         typer.echo(result)
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)

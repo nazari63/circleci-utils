@@ -35,6 +35,30 @@ def post_pr_comment(
         return f"Comment posted successfully to PR #{pr_number} in {repo}."
 
 
+def delete_pr_comment(
+    github: Github,
+    repo: str,
+    pr_number: int,
+    comment_id: int
+) -> str:
+    """Post or update a comment on a pull request using PyGitHub."""
+    if not all([repo, pr_number, comment_id, github]):
+        raise ValueError("All parameters must be provided and valid.")
+
+    repository = github.get_repo(repo)
+    pull_request = repository.get_pull(pr_number)
+
+    try:
+        # Fetch the existing comment and update it
+        comments = repository.get_issues_comments()
+        for comment in comments:
+            if comment.id == comment_id:
+                comment.delete()
+                return f"Comment #{comment_id} deleted successfully on PR #{pr_number} in {repo}."
+    except Exception as e:
+        raise ValueError(f"Failed to update comment #{comment_id}: {e}")
+
+
 def is_stale(updated_at: str, days_before_stale: int) -> bool:
     """Check if an item (issue or PR) is stale based on its last update date."""
     last_updated = updated_at.replace(tzinfo=timezone.utc)
