@@ -1,7 +1,7 @@
 import typer
 from github import Github
 from typing import Optional  # Import Optional for type hinting
-from github_cli.commands import (
+from commands import (
     post_pr_comment,
     delete_pr_comment,
     process_issues,
