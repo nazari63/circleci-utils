@@ -1,6 +1,8 @@
 import typer
 from github import Github
 from typing import Optional  # Import Optional for type hinting
+from pathlib import Path  # For file operations
+from pprint import pprint  # For pretty printing
 from commands import (
     post_pr_comment,
     delete_pr_comment,
@@ -8,8 +10,82 @@ from commands import (
     process_pull_requests,
     get_comments_ids,
     get_pr_base_sha,
+    create_issue_from_string,
 )
 app = typer.Typer(help="CLI tool for GitHub operations.")
+
+
+@app.command("create-issue-from-file")
+def cli_create_issue_from_file(
+    github_token: str = typer.Option(...,
+                                     help="GitHub token with permissions to create issues."),
+    repo: str = typer.Option(...,
+                             help="GitHub repository in the format 'owner/repo'."),
+    file_path: Path = typer.Option(...,
+                                   help="Path to the file containing issue content."),
+    issue_title: str = typer.Option(..., help="Title of the issue to create."),
+    issue_labels: Optional[str] = typer.Option(
+        None, help="Comma-separated list of labels for the issue."),
+    assignees: Optional[str] = typer.Option(
+        None, help="Comma-separated list of GitHub usernames to assign."),
+):
+    """
+    Create an issue from a file, with optional labels and assignees.
+    """
+    try:
+        # Read file content
+        if not file_path.exists() or not file_path.is_file():
+            raise FileNotFoundError(
+                f"The file '{file_path}' does not exist or is not a valid file.")
+
+        with file_path.open("r") as file:
+            issue_body = file.read().strip()
+
+        if not issue_body:
+            raise ValueError(
+                "The file is empty. Provide a file with valid issue content.")
+
+        # Connect to GitHub
+        github = Github(github_token)
+        issue = create_issue_from_string(
+            github, repo, issue_title, issue_body, issue_labels, assignees)
+
+        typer.echo(f"Issue #{issue.number} created successfully: {
+                   issue.html_url}")
+
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command("create-issue-from-string")
+def cli_create_issue_from_string(
+    github_token: str = typer.Option(...,
+                                     help="GitHub token with permissions to create issues."),
+    repo: str = typer.Option(...,
+                             help="GitHub repository in the format 'owner/repo'."),
+    issue_body: str = typer.Option(..., help="Content of the issue."),
+    issue_title: str = typer.Option(..., help="Title of the issue to create."),
+    issue_labels: Optional[str] = typer.Option(
+        None, help="Comma-separated list of labels for the issue."),
+    assignees: Optional[str] = typer.Option(
+        None, help="Comma-separated list of GitHub usernames to assign."),
+):
+    """
+    Create an issue from a string, with optional labels and assignees.
+    """
+    try:
+        # Connect to GitHub
+        github = Github(github_token)
+        issue = create_issue_from_string(
+            github, repo, issue_title, issue_body, issue_labels, assignees)
+
+        typer.echo(f"Issue #{issue.number} created successfully: {
+                   issue.html_url}")
+
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command("post-pr-comment")

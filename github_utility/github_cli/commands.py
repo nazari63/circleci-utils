@@ -5,6 +5,41 @@ from pprint import pprint
 from typing import Optional  # Import Optional for type hinting
 
 
+def create_issue_from_string(
+    github: Github,
+    repo: str,
+    issue_title: str,
+    issue_body: str,
+    issue_labels: Optional[list] = None,
+    assignees: Optional[list] = None
+) -> any:
+    """Create an issue with the given title, body, labels, and assignees."""
+    if not all([repo, issue_title, issue_body, github]):
+        raise ValueError("All parameters must be provided and valid.")
+
+    repository = github.get_repo(repo)
+
+    # Prepare issue data
+    issue_data = {
+        "title": issue_title,
+        "body": issue_body,
+    }
+
+    # Add labels if provided
+    if issue_labels:
+        issue_data["labels"] = [label.strip()
+                                for label in issue_labels.split(",")]
+
+    # Add assignees if provided
+    if assignees:
+        issue_data["assignees"] = [assignee.strip()
+                                   for assignee in assignees.split(",")]
+
+    # Create the issue
+    issue = repository.create_issue(**issue_data)
+    return issue
+
+
 def post_pr_comment(
     github: Github,
     repo: str,
