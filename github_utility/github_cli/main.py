@@ -1,5 +1,5 @@
 import typer
-from github import Github
+from github import Github, GithubIntegration, GithubException
 from typing import Optional  # Import Optional for type hinting
 from pathlib import Path  # For file operations
 from pprint import pprint  # For pretty printing
@@ -15,10 +15,68 @@ from commands import (
 app = typer.Typer(help="CLI tool for GitHub operations.")
 
 
+def get_github_client(
+    github_token: Optional[str] = None,
+    app_id: Optional[int] = None,
+    private_key_path: Optional[Path] = None,
+    private_key_str: Optional[str] = None,
+    repo: Optional[str] = None,
+) -> Github:
+    """
+    Create a GitHub client using either a GitHub token or GitHub App credentials.
+
+    :param github_token: Personal GitHub token.
+    :param app_id: GitHub App ID.
+    :param private_key_path: Path to the GitHub App private key file.
+    :param private_key_str: Private key as a string.
+    :param repo: Repository in the format 'owner/repo', required for GitHub App.
+    :return: Authenticated GitHub client.
+    """
+    if github_token:
+        return Github(github_token)
+    elif app_id and (private_key_path or private_key_str) and repo:
+        # Read private key from file or use the provided string
+        private_key = None
+        if private_key_path:
+            if not private_key_path.exists() or not private_key_path.is_file():
+                raise FileNotFoundError(f"Private key file '{
+                                        private_key_path}' does not exist.")
+            with private_key_path.open("r") as key_file:
+                private_key = key_file.read()
+        elif private_key_str:
+            private_key = private_key_str
+
+        if not private_key:
+            raise ValueError(
+                "A valid private key must be provided as a file or string.")
+
+        # Authenticate using GitHub App
+        integration = GithubIntegration(app_id, private_key)
+
+        try:
+            owner, repo_name = repo.split("/")
+            installation = integration.get_repo_installation(owner, repo_name)
+        except GithubException as e:
+            if e.status == 404:
+                raise ValueError(f"GitHub App is not installed on the repository '{
+                    repo}' or the credentials are invalid.")
+            raise e
+        access_token = integration.get_access_token(installation.id).token
+        return Github(access_token)
+    else:
+        raise ValueError(
+            "Provide either a GitHub token or GitHub App credentials (app_id, private_key, and repo).")
+
+
 @app.command("create-issue-from-file")
 def cli_create_issue_from_file(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token with permissions to create issues."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     file_path: Path = typer.Option(...,
@@ -46,7 +104,9 @@ def cli_create_issue_from_file(
                 "The file is empty. Provide a file with valid issue content.")
 
         # Connect to GitHub
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         issue = create_issue_from_string(
             github, repo, issue_title, issue_body, issue_labels, assignees)
 
@@ -60,8 +120,13 @@ def cli_create_issue_from_file(
 
 @app.command("create-issue-from-string")
 def cli_create_issue_from_string(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token with permissions to create issues."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     issue_body: str = typer.Option(..., help="Content of the issue."),
@@ -76,7 +141,9 @@ def cli_create_issue_from_string(
     """
     try:
         # Connect to GitHub
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         issue = create_issue_from_string(
             github, repo, issue_title, issue_body, issue_labels, assignees)
 
@@ -90,8 +157,13 @@ def cli_create_issue_from_string(
 
 @app.command("post-pr-comment")
 def cli_post_pr_comment(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token with permissions to comment."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     pr_number: int = typer.Option(..., help="Pull request number."),
@@ -104,7 +176,9 @@ def cli_post_pr_comment(
 ):
     """Post or update a comment on a pull request."""
     try:
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         result = post_pr_comment(
             github, repo, pr_number, comment_body, comment_id)
         typer.echo(result)
@@ -115,8 +189,13 @@ def cli_post_pr_comment(
 
 @app.command("delete-pr-comment")
 def cli_delete_pr_comment(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token with permissions to comment."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     pr_number: int = typer.Option(..., help="Pull request number."),
@@ -128,7 +207,9 @@ def cli_delete_pr_comment(
 ):
     """Delete a comment with provided comment id on a pull request."""
     try:
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         result = delete_pr_comment(
             github, repo, pr_number, comment_id)
         typer.echo(result)
@@ -139,8 +220,13 @@ def cli_delete_pr_comment(
 
 @app.command("process-stale-issues")
 def cli_process_issues(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token for authentication."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     stale_issue_label: str = typer.Option(
@@ -152,7 +238,9 @@ def cli_process_issues(
 ):
     """Process stale issues."""
     try:
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         process_issues(
             github,
             repo,
@@ -168,8 +256,13 @@ def cli_process_issues(
 
 @app.command("process-stale-prs")
 def cli_process_pull_requests(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token for authentication."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     stale_pr_message: str = typer.Option(
@@ -187,7 +280,9 @@ def cli_process_pull_requests(
 ):
     """Process stale pull requests."""
     try:
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         process_pull_requests(
             github,
             repo,
@@ -205,8 +300,13 @@ def cli_process_pull_requests(
 
 @app.command("get-pr-comments")
 def cli_get_pr_comments(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token for authentication."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     pr_number: int = typer.Option(..., help="Pull request number."),
@@ -216,7 +316,9 @@ def cli_get_pr_comments(
         ..., help="User type to filter comments. Can be 'User' or 'Bot'."),
 ):
     try:
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         comment_ids = get_comments_ids(
             github, repo, pr_number, message_substring, user_type)
         typer.echo(",".join(map(str, comment_ids)))
@@ -227,8 +329,13 @@ def cli_get_pr_comments(
 
 @app.command("get-pr-base-sha")
 def cli_get_pr_base_sha(
-    github_token: str = typer.Option(...,
-                                     help="GitHub token for authentication."),
+    github_token: Optional[str] = typer.Option(
+        None, help="GitHub token with permissions to create issues."),
+    app_id: Optional[int] = typer.Option(None, help="GitHub App ID."),
+    private_key_path: Optional[Path] = typer.Option(
+        None, help="Path to the GitHub App private key file."),
+    private_key_str: Optional[str] = typer.Option(
+        None, help="GitHub App private key as a string."),
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     pr_number: int = typer.Option(..., help="Pull request number."),
@@ -237,7 +344,9 @@ def cli_get_pr_base_sha(
     Get the base commit SHA of a pull request.
     """
     try:
-        github = Github(github_token)
+        github = get_github_client(
+            github_token, app_id, private_key_path, private_key_str, repo)
+
         base_sha = get_pr_base_sha(github, repo, pr_number)
         typer.echo(f"{base_sha}")
     except Exception as e:
