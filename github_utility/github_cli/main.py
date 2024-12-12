@@ -27,8 +27,9 @@ def get_github_client(
     if github_token:
         return Github(github_token)
     else:
-        raise ValueError(
-            "Provide a GitHub token to authenticate with GitHub.")
+        typer.echo(
+            f"Provide a GitHub token to authenticate with GitHub.", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command("get-github-access-token")
