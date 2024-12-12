@@ -78,8 +78,9 @@ def get_github_acces_token(
         access_token = integration.get_access_token(installation.id).token
         typer.echo(f"{access_token}")
     else:
-        raise ValueError(
-            "Provide GitHub App credentials (app_id, private_key, and repo).")
+        typer.echo(
+            f"Provide GitHub App credentials (app_id, private_key, and repo).", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command("create-issue-from-file")
