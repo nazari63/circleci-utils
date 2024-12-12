@@ -1,4 +1,5 @@
 import typer
+import re  # For regular expressions
 from github import Github, GithubIntegration, GithubException
 from typing import Optional  # Import Optional for type hinting
 from pathlib import Path  # For file operations
@@ -12,7 +13,24 @@ from commands import (
     get_pr_base_sha,
     create_issue_from_string,
 )
-app = typer.Typer(help="CLI tool for GitHub operations.")
+app = typer.Typer(help="CLI tool for GitHub operations.",
+                  pretty_exceptions_show_locals=False)
+
+
+def fix_pem_string(content: str) -> str:
+    """
+    Fix the formatting of a PEM string by replacing spaces in the body with newlines.
+    """
+    content = re.sub(r"(-----BEGIN [A-Z ]+-----)\s+",
+                     r"\1\n", content)  # Fix BEGIN line
+    content = re.sub(r"\s+(-----END [A-Z ]+-----)",
+                     r"\n\1", content)    # Fix END line
+
+    # Replace spaces in the body with newlines
+    fixed_content = re.sub(r"(?<=-----\n)(.+?)(?=\n-----)",
+                           lambda match: match.group(0).replace(" ", "\n"),
+                           content, flags=re.S)
+    return fixed_content
 
 
 def get_github_client(
@@ -65,6 +83,7 @@ def get_github_acces_token(
             raise ValueError(
                 "A valid private key must be provided as a file or string.")
 
+        private_key = fix_pem_string(private_key)
         # Authenticate using GitHub App
         integration = GithubIntegration(app_id, private_key)
 
