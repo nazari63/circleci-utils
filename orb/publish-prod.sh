@@ -27,7 +27,7 @@ if [ $? -eq 0 ]; then
     ORB_VERSION=$(circleci orb info ethereum-optimism/circleci-utils | grep -i latest | cut -d"@" -f2)
     #tag the repository with the version of the orb
     git tag -a orb/$ORB_VERSION -m "Version orb/$ORB_VERSION"
-    git push origin $ORB_VERSION
+    git push origin orb/$ORB_VERSION
     else
     exit 1
 fi
