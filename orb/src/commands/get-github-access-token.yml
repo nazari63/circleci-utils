@@ -1,0 +1,18 @@
+description: >
+  This command will get a GitHub Access Token using the GitHub App's private key.
+parameters:
+  private-key-str:
+    type: string
+  app-id:
+    type: string
+  repo:
+    type: string
+  token-name:
+    type: string
+steps:
+  - setup
+  - run:
+      name: Get GitHub Access Token
+      command: |
+        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="<< parameters.private-key-str >>" --app-id=<< parameters.app-id >> --repo "<< parameters.repo >>")
+        echo "export << parameters.token-name >>=${token}" >> $BASH_ENV

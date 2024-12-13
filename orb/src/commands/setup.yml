@@ -1,0 +1,19 @@
+description: >
+  This command will take care to setup the circleci-utils. This will run only once per job.
+parameters:
+  branch:
+    type: string
+    default: "main"
+    description: "The version of the circleci-utils to use"
+steps:
+  - run:
+      name: Setup circleci-utils
+      command: |
+        #only clone if the directory does not exist
+        if [ ! -d "/tmp/circleci-utils" ]; then
+          git clone --branch << parameters.branch >> --depth 1 https://github.com/ethereum-optimism/circleci-utils.git /tmp/circleci-utils
+          GITHUB_CLI_PATH="/tmp/circleci-utils/github_utility/github_cli"
+          pip install -r $GITHUB_CLI_PATH/requirements.txt
+          CIRCLECI_TOOLS_PATH=$GITHUB_CLI_PATH/main.py
+          echo "export CIRCLECI_TOOLS_PATH=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
+        fi
