@@ -17,4 +17,4 @@ circleci orb pack ./ > orb.yml
 
 circleci orb publish orb.yml ethereum-optimism/circleci-utils@dev:first
 
-circleci orb source ethereum-optimism/circleci-utils@dev:first
+# circleci orb source ethereum-optimism/circleci-utils@dev:first
