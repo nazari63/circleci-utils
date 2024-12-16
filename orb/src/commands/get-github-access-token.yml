@@ -2,17 +2,24 @@ description: >
   This command will get a GitHub Access Token using the GitHub App's private key.
 parameters:
   private-key-str:
-    type: string
+    type: env_var_name
+    default: GITHUB_APP_KEY
+    description: "The GitHub App's private key"
   app-id:
-    type: string
+    type: env_var_name
+    default: GITHUB_APP_ID
+    description: "The GitHub App ID"
   repo:
     type: string
+    description: "The repository to get the token for"
   token-name:
     type: string
+    default: GITHUB_APP_TOKEN
+    description: "The name of the environment variable to store the token in"
 steps:
   - setup-circleci-utils
   - run:
       name: Get GitHub Access Token
       command: |
-        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="<< parameters.private-key-str >>" --app-id=<< parameters.app-id >> --repo "<< parameters.repo >>")
+        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
         echo "export << parameters.token-name >>=${token}" >> $BASH_ENV

@@ -1,0 +1,23 @@
+description: >
+  This command will run the issue-metrics tool to generate a markdown file with the metrics of the issues in the repository.
+parameters:
+  GH_TOKEN:
+    type: env_var_name
+    description: "The GitHub token to use for the GitHub API"
+    default: GITHUB_APP_TOKEN
+  SEARCH_QUERY:
+    description: "The search query to filter the issues"
+    type: string
+  file-path:
+    description: "The path to save the generated file"
+    type: string
+  docker-image:
+    description: "The docker image to use for the issue-metrics tool"
+    type: string
+    default: "us-docker.pkg.dev/oplabs-tools-artifacts/images/issue-metrics@sha256:e2528e480083fab6bb81f3a926598e25e0ae44ef3cc94a1d5d9d270978189ffe"
+steps:
+  - run:
+      name: Run Issue-Metrics Tool
+      command: |
+        docker run --name issue-metrics-run -e SEARCH_QUERY="<< parameters.SEARCH_QUERY >>" -e GH_TOKEN="${<< parameters.GH_TOKEN >>}" "<< parameters.docker-image >>"
+        docker cp issue-metrics-run:/action/workspace/issue_metrics.md << parameters.file-path >>

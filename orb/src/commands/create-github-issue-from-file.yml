@@ -2,25 +2,32 @@ description: >
   This command will create an issue in the repository using the provided file.
 parameters:
   github-token:
-    type: string
+    type: env_var_name
+    description: "The GitHub token to use for the GitHub API"
+    default: GITHUB_APP_TOKEN
   repo:
     type: string
+    description: "The repository to create the issue in"
   file-path:
     type: string
     default: "./issue_metrics.md"
+    description: "The path to the file to use for the issue body"
   issue-title:
     type: string
+    description: "The title of the issue"
   issue-labels:
     type: string
+    description: "The labels to add to the issue"
   assignees:
     type: string
+    description: "The assignees to add to the issue"
 steps:
   - setup-circleci-utils
   - run:
       name: Create issue from file
       command: |
         python $CIRCLECI_TOOLS_PATH create-issue-from-file \
-          --github-token "<< parameters.github-token >>" \
+          --github-token "${<< parameters.github-token >>}" \
           --repo "<< parameters.repo >>" \
           --file-path "<< parameters.file-path >>" \
           --issue-title "<< parameters.issue-title >>" \
