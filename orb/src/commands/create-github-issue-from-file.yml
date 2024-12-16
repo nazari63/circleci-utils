@@ -15,7 +15,7 @@ parameters:
   assignees:
     type: string
 steps:
-  - setup
+  - setup-circleci-utils
   - run:
       name: Create issue from file
       command: |

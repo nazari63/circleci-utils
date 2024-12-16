@@ -10,7 +10,7 @@ parameters:
   token-name:
     type: string
 steps:
-  - setup
+  - setup-circleci-utils
   - run:
       name: Get GitHub Access Token
       command: |
