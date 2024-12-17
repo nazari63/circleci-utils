@@ -1,0 +1,25 @@
+description: >
+  This command provide a way to query the GitHub API for PR comments.
+parameters:
+  repo:
+    type: string
+  pr-number:
+    type: string
+  comment-id:
+    type: string
+    description: "The name of the environment variable to store the comment ID in"
+  token-name:
+    type: env_var_name
+    default: GITHUB_APP_TOKEN
+steps:
+  - setup-circleci-utils
+  - run:
+      name: Delete PR Comments
+      command: |
+        if [ -n "<<parameters.comment-id>>" ]; then
+             python $CIRCLECI_TOOLS_PATH delete-pr-comment \
+               --github-token "${<< parameters.token-name >>}" \
+               --repo "<< parameters.repo >>" \
+               --pr-number "<< parameters.pr-number >>" \
+               --comment-id << parameters.comment-id >>
+         fi

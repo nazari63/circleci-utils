@@ -5,6 +5,10 @@ parameters:
     type: string
     default: "v0.5.0"
     description: "The version of the circleci-utils to use"
+  output-path:
+    type: string
+    default: CIRCLECI_TOOLS_PATH
+    description: "The name of the environment variable to store the path to the circleci-utils in"
 steps:
   - run:
       name: Setup circleci-utils
@@ -15,5 +19,5 @@ steps:
           GITHUB_CLI_PATH="/tmp/circleci-utils/github_utility/github_cli"
           pip install -r $GITHUB_CLI_PATH/requirements.txt
           CIRCLECI_TOOLS_PATH=$GITHUB_CLI_PATH/main.py
-          echo "export CIRCLECI_TOOLS_PATH=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
+          echo "export << parameters.output-path >>=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
         fi

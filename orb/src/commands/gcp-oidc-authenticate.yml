@@ -25,6 +25,7 @@ parameters:
     type: string
     default: /home/circleci/oidc_token.json
 steps:
+  - gcp-cli/install
   - run:
       name: "Create OIDC credential configuration"
       command: |

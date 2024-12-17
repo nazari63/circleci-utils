@@ -12,7 +12,7 @@ parameters:
   repo:
     type: string
     description: "The repository to get the token for"
-  token-name:
+  output-token-name:
     type: string
     default: GITHUB_APP_TOKEN
     description: "The name of the environment variable to store the token in"
@@ -22,4 +22,4 @@ steps:
       name: Get GitHub Access Token
       command: |
         token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
-        echo "export << parameters.token-name >>=${token}" >> $BASH_ENV
+        echo "export << parameters.output-token-name >>=${token}" >> $BASH_ENV

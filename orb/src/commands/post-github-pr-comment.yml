@@ -1,0 +1,34 @@
+description: >
+  This command provide a way to query the GitHub API for PR comments.
+parameters:
+  repo:
+    type: string
+  pr-number:
+    type: string
+  comment-id:
+    type: string
+    description: "The name of the environment variable to store the comment ID in"
+  comment-body:
+    type: string
+    description: "The body of the comment to post"
+  token-name:
+    type: env_var_name
+    default: GITHUB_APP_TOKEN
+
+steps:
+  - setup-circleci-utils
+  - run:
+      name: Post PR Comments
+      command: |
+
+        COMMENT_OPTION=""
+        if [ -n "<< parameters.comment-id >>" ]; then
+          COMMENT_OPTION="--comment-id << parameters.comment-id >>"
+        fi
+
+        python $CIRCLECI_TOOLS_PATH post-pr-comment \
+              --github-token "${<< parameters.token-name >>}" \
+              --repo "<< parameters.repo >>" \
+              --pr-number "<< parameters.pr-number >>" \
+              --comment-body "<< parameters.comment-body >>" \
+              $COMMENT_OPTION
