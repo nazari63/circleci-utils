@@ -198,9 +198,10 @@ def cli_post_pr_comment(
     try:
         github = get_github_client(github_token)
 
-        result = post_pr_comment(
-            github, repo, pr_number, comment_body, comment_id)
-        typer.echo(result)
+        for comment_id in comment_id.split(","):
+            result = post_pr_comment(
+                github, repo, pr_number, comment_body, comment_id)
+            typer.echo(result)
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)
@@ -214,10 +215,10 @@ def cli_delete_pr_comment(
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     pr_number: int = typer.Option(..., help="Pull request number."),
-    comment_id: int = typer.Option(
+    comment_id: str = typer.Option(
         None,
         "--comment-id",
-        help="ID of the comment to delete."
+        help="ID of the comment to delete. Can be multiple IDs separated by commas."
     ),
 ):
     """Delete a comment with provided comment id on a pull request."""
@@ -310,10 +311,10 @@ def cli_get_pr_comments(
     repo: str = typer.Option(...,
                              help="GitHub repository in the format 'owner/repo'."),
     pr_number: int = typer.Option(..., help="Pull request number."),
-    message_substring: str = typer.Option(...,
-                                          help="Substring to search in comments."),
-    user_type: str = typer.Option(
-        ..., help="User type to filter comments. Can be 'User' or 'Bot'."),
+    message_substring: Optional[str] = typer.Option(
+        None, help="Substring to search in comments."),
+    user_type: Optional[str] = typer.Option(
+        None, help="User type to filter comments. Can be 'User' or 'Bot'."),
 ):
     try:
         github = get_github_client(github_token)

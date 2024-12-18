@@ -74,24 +74,28 @@ def delete_pr_comment(
     github: Github,
     repo: str,
     pr_number: int,
-    comment_id: int
+    comment_ids: str
 ) -> str:
     """Post or update a comment on a pull request using PyGitHub."""
-    if not all([repo, pr_number, comment_id, github]):
+    if not all([repo, pr_number, comment_ids, github]):
         raise ValueError("All parameters must be provided and valid.")
 
     repository = github.get_repo(repo)
     pull_request = repository.get_pull(pr_number)
 
     try:
+        result = ""
         # Fetch the existing comment and update it
         comments = repository.get_issues_comments()
         for comment in comments:
-            if comment.id == comment_id:
-                comment.delete()
-                return f"Comment #{comment_id} deleted successfully on PR #{pr_number} in {repo}."
+            for comment_id in comment_ids.split(","):
+                if comment.id == int(comment_id):
+                    comment.delete()
+                    result += f"Comment #{comment_id} deleted successfully on PR #{
+                        pr_number} in {repo}.\n"
+        return result
     except Exception as e:
-        raise ValueError(f"Failed to update comment #{comment_id}: {e}")
+        raise ValueError(f"Failed to delete comment #{comment_ids}: {e}")
 
 
 def is_stale(updated_at: str, days_before_stale: int) -> bool:
@@ -111,8 +115,12 @@ def get_comments_ids(github: Github, repo: str, pr_number: int, message_substrin
 
     matching_comment_ids = []
     for comment in comments:
-        if comment.user.type == user_type and message_substring in comment.body:
-            matching_comment_ids.append(comment.id)
+        if user_type:
+            if comment.user.type == user_type and message_substring in comment.body:
+                matching_comment_ids.append(comment.id)
+        else:
+            if message_substring in comment.body:
+                matching_comment_ids.append(comment.id)
 
     return matching_comment_ids
 
