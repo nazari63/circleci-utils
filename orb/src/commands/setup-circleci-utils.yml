@@ -9,10 +9,19 @@ parameters:
     type: string
     default: CIRCLECI_TOOLS_PATH
     description: "The name of the environment variable to store the path to the circleci-utils in"
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
   - run:
       name: Setup circleci-utils
       command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
         #only clone if the directory does not exist
         if [ ! -d "/tmp/circleci-utils" ]; then
           git clone --branch << parameters.branch >> --depth 1 https://github.com/ethereum-optimism/circleci-utils.git /tmp/circleci-utils

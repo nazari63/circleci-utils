@@ -24,11 +24,20 @@ parameters:
     description: "The path to save the generated OIDC token"
     type: string
     default: /home/circleci/oidc_token.json
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
   - gcp-cli/install
   - run:
       name: "Create OIDC credential configuration"
       command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
         # Store OIDC token in temp file
         echo $CIRCLE_OIDC_TOKEN > << parameters.oidc_token_file_path >>
         # Create a credential configuration for the generated OIDC ID Token
@@ -37,9 +46,7 @@ steps:
             --output-file="<< parameters.gcp_cred_config_file_path >>" \
             --service-account="${<< parameters.service_account_email >>}" \
             --credential-source-file=<< parameters.oidc_token_file_path >>
-  - run:
-      name: "Authenticate with GCP using OIDC"
-      command: |
+
         # Configure gcloud to leverage the generated credential configuration
         gcloud auth login --brief --cred-file "<< parameters.gcp_cred_config_file_path >>"
         # Configure ADC

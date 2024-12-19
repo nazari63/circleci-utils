@@ -15,9 +15,18 @@ parameters:
     description: "The docker image to use for the issue-metrics tool"
     type: string
     default: "us-docker.pkg.dev/oplabs-tools-artifacts/images/issue-metrics@sha256:e2528e480083fab6bb81f3a926598e25e0ae44ef3cc94a1d5d9d270978189ffe"
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
   - run:
       name: Run Issue-Metrics Tool
       command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
         docker run --name issue-metrics-run -e SEARCH_QUERY="<< parameters.SEARCH_QUERY >>" -e GH_TOKEN="${<< parameters.GH_TOKEN >>}" "<< parameters.docker-image >>"
         docker cp issue-metrics-run:/action/workspace/issue_metrics.md << parameters.file-path >>

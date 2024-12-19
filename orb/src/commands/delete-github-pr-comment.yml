@@ -11,15 +11,25 @@ parameters:
   token-name:
     type: env_var_name
     default: GITHUB_APP_TOKEN
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
   - setup-circleci-utils
   - run:
       name: Delete PR Comments
       command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
+
         if [ -n "<<parameters.comment-id>>" ]; then
-             python $CIRCLECI_TOOLS_PATH delete-pr-comment \
-               --github-token "${<< parameters.token-name >>}" \
-               --repo "<< parameters.repo >>" \
-               --pr-number "<< parameters.pr-number >>" \
-               --comment-id << parameters.comment-id >>
-         fi
+            python $CIRCLECI_TOOLS_PATH delete-pr-comment \
+              --github-token "${<< parameters.token-name >>}" \
+              --repo "<< parameters.repo >>" \
+              --pr-number "<< parameters.pr-number >>" \
+              --comment-id "<< parameters.comment-id >>"
+        fi

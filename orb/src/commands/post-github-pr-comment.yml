@@ -14,12 +14,19 @@ parameters:
   token-name:
     type: env_var_name
     default: GITHUB_APP_TOKEN
-
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
   - setup-circleci-utils
   - run:
       name: Post PR Comments
       command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
 
         COMMENT_OPTION=""
         if [ -n "<< parameters.comment-id >>" ]; then

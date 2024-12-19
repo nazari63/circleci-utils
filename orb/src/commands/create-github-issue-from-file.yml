@@ -21,11 +21,20 @@ parameters:
   assignees:
     type: string
     description: "The assignees to add to the issue"
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
   - setup-circleci-utils
   - run:
       name: Create issue from file
       command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
         python $CIRCLECI_TOOLS_PATH create-issue-from-file \
           --github-token "${<< parameters.github-token >>}" \
           --repo "<< parameters.repo >>" \
