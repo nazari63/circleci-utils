@@ -24,8 +24,8 @@ This tool audits GitHub Actions usage across all repositories in a GitHub organi
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd github-actions-audit
+   git clone https://github.com/ethereum-optimism/circleci-utils
+   cd admin_utils/repository_audit
    ```
 
 2. Create and configure the environment file:
