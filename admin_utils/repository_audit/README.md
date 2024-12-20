@@ -1,105 +1,151 @@
 # GitHub Actions Repository Audit
 
-This tool audits GitHub Actions usage across all repositories in a GitHub organization. It provides information about each repository's status, including whether Actions are enabled and how many workflow files exist.
+A tool to audit GitHub Actions usage across repositories. It can analyze either a single repository or all repositories in an organization, providing detailed information about Actions configuration and workflow files.
 
 ## Features
 
-- Lists all repositories in an organization
-- Shows repository visibility (public/private)
-- Indicates if repositories are archived or disabled
-- Counts GitHub Actions workflow files
-- Checks if Actions are enabled for each repository
-- Exports results to CSV
-- Provides summary statistics
+- Audit single repository or entire organization
+- Detailed Actions permissions and settings
+- Workflow file detection and validation
+- Repository status information (visibility, archive status, etc.)
+- CSV export of results
+- Detailed console output during audit
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- GitHub Personal Access Token with the following permissions:
-  - `repo` (Full access to private repositories)
-  - `workflow` (Update GitHub Action workflows)
+- GitHub Personal Access Token with permissions:
+  - `repo` (Full access to repositories)
+  - `workflow` (Access to Actions and workflows)
   - `read:org` (Read organization data)
 
 ## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/ethereum-optimism/circleci-utils
-   cd admin_utils/repository_audit
-   ```
+```bash
+git clone https://github.com/ethereum-optimism/circleci-utils
+cd admin_utils/repository_audit
+```
 
-2. Create and configure the environment file:
-   ```bash
-   echo "GITHUB_TOKEN=your-token-here" > .env
-   echo "GITHUB_ORG=your-org-name" >> .env
-   ```
+2. Set up environment variables (optional):
+```bash
+export GITHUB_TOKEN=your-token-here
+export GITHUB_ORG=your-org-name
+```
 
-3. Set up the virtual environment and install dependencies:
-   ```bash
-   make setup
-   ```
+3. Install dependencies:
+```bash
+make setup
+```
 
 ## Usage
 
-1. Run the script:
-   ```bash
-   make run
-   ```
+### Command Line Options
 
-   Or manually activate the virtual environment and run:
-   ```bash
-   source venv/bin/activate
-   python github_actions_audit.py
-   ```
+```bash
+python github_actions_audit.py --help
+```
 
-2. If the `GITHUB_ORG` environment variable is not set, you will be prompted to enter the organization name.
+Available options:
+- `--org`: GitHub organization name
+- `--repo`: Specific repository to audit (optional)
+- `--token`: GitHub token (if not set in environment)
 
-3. The script will generate a CSV file with the naming format: `github_actions_audit_<org-name>_<timestamp>.csv`
+### Using Make Commands
 
-## Output
+1. Audit all repositories in an organization:
+```bash
+# Using environment variables
+make run
 
-The tool generates two types of output:
+# Specifying organization
+make run ORG=your-org-name
+```
 
-1. Console output showing:
-   - Total number of repositories
-   - Number of repositories with workflows
-   - List of repositories that have GitHub Actions configured
+2. Audit a single repository:
+```bash
+# Using environment variables
+make run-single REPO=repository-name
 
-2. CSV file with detailed information including:
-   - Repository name
-   - Visibility status
-   - Archive status
-   - Actions enabled/disabled
-   - Workflow count
-   - Creation and last update dates
-   - Default branch
-   - Repository URL
+# Specifying both org and repo
+make run-single ORG=your-org-name REPO=repository-name
+```
 
-## Maintenance
-
-To clean up the environment and generated files:
+3. Clean up generated files:
 ```bash
 make clean
 ```
 
-This will:
-- Remove the virtual environment
-- Delete all generated CSV files
-- Clean up Python cache files
+## Output
 
-## Error Handling
+### Console Output
+The tool provides real-time feedback during the audit:
+- Repository being checked
+- Actions status and permissions
+- Workflow files found
+- Any errors or issues encountered
 
-The script includes error handling for:
-- GitHub API request failures
-- Authentication issues
-- Missing environment variables
-- Invalid organization names
+### CSV Output
+Generated CSV file includes:
+- Repository information (name, visibility, status)
+- Actions configuration details
+- Workflow file information
+- Timestamps and URLs
 
-If any errors occur, they will be displayed in the console with appropriate error messages.
+File naming format:
+- All repositories: `github_actions_audit_<org>_<timestamp>.csv`
+- Single repository: `github_actions_audit_<org>_<repo>_<timestamp>.csv`
+
+## CSV Columns
+
+| Column | Description |
+|--------|-------------|
+| repository | Repository name |
+| visibility | Public or private |
+| archived | Repository archive status |
+| actions_enabled | Whether Actions are enabled |
+| actions_status | Current Actions status |
+| allowed_actions | Types of actions allowed |
+| workflow_count | Number of workflow files |
+| workflow_files | Names of workflow files |
+| default_branch | Default branch name |
+| url | Repository URL |
+
+## Development
+
+1. Install development dependencies:
+```bash
+make dev-setup
+```
+
+2. Run linting:
+```bash
+make lint
+```
+
+## Troubleshooting
+
+Common issues:
+
+1. Authentication Errors:
+- Ensure GITHUB_TOKEN is set and has required permissions
+- Token should be a valid PAT (Personal Access Token)
+
+2. Access Issues:
+- Verify organization membership
+- Check repository access permissions
+- Ensure token has necessary scopes
+
+3. Rate Limiting:
+- Tool respects GitHub API rate limits
+- For large organizations, audit may take longer
 
 ## Contributing
 
-Feel free to submit issues, fork the repository, and create pull requests for any improvements.
+1. Fork the repository
+2. Create your feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
 

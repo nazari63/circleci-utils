@@ -24,9 +24,13 @@ steps:
       name: Run Issue-Metrics Tool
       command: |
         if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
-          echo "Skipping command because condition is not met"
-          exit 0
-        fi
+              echo "Skipping command because condition is not met"
+              exit 0
+            fi
 
-        docker run --name issue-metrics-run -e SEARCH_QUERY="<< parameters.SEARCH_QUERY >>" -e GH_TOKEN="${<< parameters.GH_TOKEN >>}" "<< parameters.docker-image >>"
-        docker cp issue-metrics-run:/action/workspace/issue_metrics.md << parameters.file-path >>
+            if [ "$(docker ps -aq -f name=issue-metrics-run)" ]; then
+              docker rm -f issue-metrics-run
+            fi
+
+            docker run --name issue-metrics-run -e SEARCH_QUERY="<< parameters.SEARCH_QUERY >>" -e GH_TOKEN="${<< parameters.GH_TOKEN >>}" "<< parameters.docker-image >>"
+            docker cp issue-metrics-run:/action/workspace/issue_metrics.md << parameters.file-path >>
