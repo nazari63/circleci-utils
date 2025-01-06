@@ -1,0 +1,59 @@
+description: >
+  This command will take care to deploy the github pages.
+parameters:
+  src-pages-dir:
+    type: string
+    description: "path to the folder to deploy"
+  pages-branch:
+    type: string
+    default: "gh-pages"
+    description: "The branch to deploy to"
+  token-name:
+    type: env_var_name
+    default: GITHUB_APP_TOKEN
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
+steps:
+  - run:
+      name: Deploy github pages
+      command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
+        pages_branch="<< parameters.pages-branch >>"
+        pages_folder="<< parameters.src-pages-dir >>"
+
+        SOURCE_COMMIT=$(git rev-parse HEAD)
+        SOURCE_REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+
+        USERNAME=${CIRCLE_USERNAME}
+
+        # Extract the email from the user info
+        ID=$(curl https://api.github.com/users/$USERNAME | jq -r '.id')
+        USER_EMAIL="${ID}+${USERNAME}@users.noreply.github.com"
+
+        # Git operations with committer's identity
+        git config --global user.name "${USERNAME}"
+        git config --global user.email "${USER_EMAIL}"
+
+        # Remove all files from staging
+        git reset --hard  
+
+        #checkout target branch
+        git fetch origin ${pages_branch} 
+        git checkout ${pages_branch}
+
+        # Clean working directory
+        rm -rf *
+
+        # Copy new files
+        cp -a ${pages_folder}/. .
+
+        # Commit and push
+        git add .
+        git commit -m "Deploying to ${pages_branch} from @ ${SOURCE_REPO}@${SOURCE_COMMIT} 🚀"
+        git push "https://x-access-token:${<< parameters.token-name >>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" ${pages_branch}
