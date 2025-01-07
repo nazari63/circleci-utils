@@ -30,6 +30,8 @@ steps:
           exit 0
         fi
 
+        cd $(dirname "$CIRCLECI_TOOLS_PATH")
+
         token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
         echo "export << parameters.output-token-name >>=${token}" >> $BASH_ENV
         #if the token is not set, fail the build

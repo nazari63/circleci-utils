@@ -26,7 +26,11 @@ steps:
         if [ ! -d "/tmp/circleci-utils" ]; then
           git clone --branch << parameters.branch >> --depth 1 https://github.com/ethereum-optimism/circleci-utils.git /tmp/circleci-utils
           GITHUB_CLI_PATH="/tmp/circleci-utils/github_utility/github_cli"
-          pip install -r $GITHUB_CLI_PATH/requirements.txt
           CIRCLECI_TOOLS_PATH=$GITHUB_CLI_PATH/main.py
+          
+          cd $(dirname "$CIRCLECI_TOOLS_PATH")
+          pip install -r requirements.txt
+
           echo "export << parameters.output-path >>=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
+          
         fi
