@@ -12,6 +12,7 @@ parameters:
   repo:
     type: string
     description: "The repository to get the token for"
+    default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
   output-token-name:
     type: string
     default: GITHUB_APP_TOKEN

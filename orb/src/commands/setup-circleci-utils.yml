@@ -5,10 +5,6 @@ parameters:
     type: string
     default: "v0.5.0"
     description: "The version of the circleci-utils to use"
-  output-path:
-    type: string
-    default: CIRCLECI_TOOLS_PATH
-    description: "The name of the environment variable to store the path to the circleci-utils in"
   condition:
     type: string
     default: "always"
@@ -31,6 +27,6 @@ steps:
           cd $(dirname "$CIRCLECI_TOOLS_PATH")
           pip install -r requirements.txt
 
-          echo "export << parameters.output-path >>=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
+          echo "export CIRCLECI_TOOLS_PATH=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
           
         fi

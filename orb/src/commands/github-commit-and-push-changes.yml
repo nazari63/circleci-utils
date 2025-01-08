@@ -1,0 +1,71 @@
+description: >
+  This command commit and push a folder change to a specific repo/branch
+parameters:
+  github-token:
+    type: env_var_name
+    description: "The GitHub token to use for the GitHub API"
+    default: GITHUB_APP_TOKEN
+  repo:
+    type: string
+    default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    description: "The repository to create the issue in"
+  branch:
+    type: string
+    default: $CIRCLE_BRANCH
+    description: "Branch where to commit to"
+  folder:
+    type: string
+    description:
+  commit-message:
+    type: string
+    description: "Message to use"
+    default: "Deploying to ${CIRCLE_BRANCH} from @ ${SOURCE_REPO}@${SOURCE_COMMIT} 🚀"
+  commit-username:
+    type: string
+    description: "username to use for commit, if not specified the circleci user that triggered the event is used"
+    default: ""
+  commit-email:
+    type: string
+    description: "email to use for commit, if not specified <github-username-id>+<commit-username>@users.noreply.github.com will be used"
+    default: ""
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
+steps:
+  - run:
+      name: Commit and Push Changes
+      command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
+        if [ -z "<< parameters.commit-username >>" ]; then
+          # Get the username of the user that triggered the event
+          USERNAME=${CIRCLE_USERNAME}
+        else
+          USERNAME="<< parameters.commit-username >>"
+        fi
+
+        if [ -z "<< parameters.commit-email >>" ]; then
+          # Extract the email from the user info
+          ID=$(curl https://api.github.com/users/$USERNAME | jq -r '.id')
+          USER_EMAIL="${ID}+${USERNAME}@users.noreply.github.com"
+        else
+          USER_EMAIL="<< parameters.commit-email >>"
+        fi
+
+        # Git operations with committer's identity
+        git config --global user.name "${USERNAME}"
+        git config --global user.email "${USER_EMAIL}"
+
+        cd "<< parameters.folder >>"
+        git add .
+
+        if git diff --staged --quiet && [ -n "$(git status --porcelain .)" ]; then
+          git commit -m "Deploying to ${CIRCLE_BRANCH} from @ ${SOURCE_REPO}@${SOURCE_COMMIT} 🚀"
+          git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" ${CIRCLE_BRANCH}
+        else
+          echo "No changes to commit"
+        fi
