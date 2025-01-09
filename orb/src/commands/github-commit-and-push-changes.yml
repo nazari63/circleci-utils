@@ -28,6 +28,10 @@ parameters:
     type: string
     description: "email to use for commit, if not specified <github-username-id>+<commit-username>@users.noreply.github.com will be used"
     default: ""
+  skip-ci:
+    type: boolean
+    description: "Whether to skip CI checks"
+    default: false
   condition:
     type: string
     default: "always"
@@ -63,8 +67,14 @@ steps:
         cd "<< parameters.folder >>"
         git add .
 
+        SKIP_CI=""
+        if [ "<< parameters.skip-ci >>" = true ]; then
+          SKIP_CI="[skip ci]"
+        fi
+
+
         if git diff --staged --quiet && [ -n "$(git status --porcelain .)" ]; then
-          git commit -m "Deploying to ${CIRCLE_BRANCH} from @ ${SOURCE_REPO}@${SOURCE_COMMIT} 🚀"
+          git commit -m "<< parameters.commit-message >> ${SKIP_CI}"
           git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" ${CIRCLE_BRANCH}
         else
           echo "No changes to commit"
