@@ -65,6 +65,8 @@ steps:
         git config --global user.email "${USER_EMAIL}"
 
         cd "<< parameters.folder >>"
+        echo "adding new changes"
+        git add . -n
         git add .
 
         SKIP_CI=""
@@ -73,9 +75,9 @@ steps:
         fi
 
 
-        if git diff --staged --quiet && [ -n "$(git status --porcelain .)" ]; then
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
           git commit -m "<< parameters.commit-message >> ${SKIP_CI}"
           git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" ${CIRCLE_BRANCH}
-        else
-          echo "No changes to commit"
         fi
