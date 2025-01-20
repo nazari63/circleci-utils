@@ -72,10 +72,14 @@ steps:
 
         # Commit and push
         git add .
-        git commit -m "Deploying to ${pages_branch} from @ ${SOURCE_REPO}@${SOURCE_COMMIT} 🚀"
 
-        if [ "<< parameters.force-push >>" = true ]; then
-          git push --set-upstream origin ${pages_branch} --force
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
         else
-          git push --set-upstream origin ${pages_branch} 
+          git commit -m "Deploying to ${pages_branch} from @ ${SOURCE_REPO}@${SOURCE_COMMIT} 🚀"
+          if [ "<< parameters.force-push >>" = true ]; then
+            git push --set-upstream origin ${pages_branch} --force
+          else
+            git push --set-upstream origin ${pages_branch} 
+          fi
         fi
