@@ -70,8 +70,6 @@ steps:
         # Copy new files
         cp -a ${pages_folder}/. .
 
-
-
         # Commit and push
         git add .
 
