@@ -64,10 +64,17 @@ steps:
         git config --global user.name "${USERNAME}"
         git config --global user.email "${USER_EMAIL}"
 
+
         cd "<< parameters.folder >>"
-        echo "adding new changes"
-        git add . -n
+        # Fetch latest changes
+        git fetch origin "<< parameters.branch >>"
+
+        # Attempt to rebase on top of latest changes
+        git rebase "origin/<< parameters.branch >>"
+
+        git add . -n  # Dry run to show what would be added
         git add .
+
 
         SKIP_CI=""
         if [ "<< parameters.skip-ci >>" = true ]; then
@@ -79,5 +86,5 @@ steps:
           echo "No changes to commit"
         else
           git commit -m "${SKIP_CI}<< parameters.commit-message >>"
-          git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" ${CIRCLE_BRANCH}
+          git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"
         fi
