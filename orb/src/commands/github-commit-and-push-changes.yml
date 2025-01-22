@@ -65,15 +65,25 @@ steps:
         git config --global user.email "${USER_EMAIL}"
 
 
-        cd "<< parameters.folder >>"
-        # Fetch latest changes
-        git fetch origin "<< parameters.branch >>"
-
-        # Attempt to rebase on top of latest changes
-        git rebase "origin/<< parameters.branch >>"
-
+        # Stage changes first
         git add . -n  # Dry run to show what would be added
         git add .
+
+        # Create commit if there are changes
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+          exit 0
+        fi
+
+        echo "Committing changes..."
+        git commit -m "Update - Gov Uploads"
+
+        # Now fetch and rebase
+        echo "Fetching latest changes..."
+        git fetch origin ${CIRCLE_BRANCH}
+
+        echo "Rebasing on latest changes..."
+        git rebase origin/${CIRCLE_BRANCH}
 
 
         SKIP_CI=""
