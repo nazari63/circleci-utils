@@ -15,7 +15,7 @@ parameters:
     description: "Branch where to commit to"
   folder:
     type: string
-    description:
+    description: "Folder to commit"
   commit-message:
     type: string
     description: "Message to use"
@@ -64,6 +64,7 @@ steps:
         git config --global user.name "${USERNAME}"
         git config --global user.email "${USER_EMAIL}"
 
+        cd "<< parameters.folder >>"
 
         # Stage changes first
         git add . -n  # Dry run to show what would be added
