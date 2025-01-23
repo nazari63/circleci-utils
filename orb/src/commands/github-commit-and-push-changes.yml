@@ -79,18 +79,11 @@ steps:
         fi
 
         echo "Committing changes..."
-        git commit -m "<< parameters.commit-message >>"
-
+        git commit -m "${SKIP_CI}<< parameters.commit-message >>"
 
         SKIP_CI=""
         if [ "<< parameters.skip-ci >>" = true ]; then
           SKIP_CI="[skip ci] "
         fi
 
-
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "${SKIP_CI}<< parameters.commit-message >>"
-          git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"
-        fi
+        git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"
