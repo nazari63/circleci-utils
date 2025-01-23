@@ -15,7 +15,7 @@ parameters:
     description: "Branch where to commit to"
   folder:
     type: string
-    description:
+    description: "Folder to commit"
   commit-message:
     type: string
     description: "Message to use"
@@ -65,9 +65,27 @@ steps:
         git config --global user.email "${USER_EMAIL}"
 
         cd "<< parameters.folder >>"
-        echo "adding new changes"
-        git add . -n
+
+        # Stage changes first
+        git add . -n  # Dry run to show what would be added
         git add .
+
+        # Create commit if there are changes
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+          exit 0
+        fi
+
+        echo "Committing changes..."
+        git commit -m "Update - Gov Uploads"
+
+        # Now fetch and rebase
+        echo "Fetching latest changes..."
+        git fetch origin ${CIRCLE_BRANCH}
+
+        echo "Rebasing on latest changes..."
+        git rebase origin/${CIRCLE_BRANCH}
+
 
         SKIP_CI=""
         if [ "<< parameters.skip-ci >>" = true ]; then
@@ -79,5 +97,5 @@ steps:
           echo "No changes to commit"
         else
           git commit -m "${SKIP_CI}<< parameters.commit-message >>"
-          git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" ${CIRCLE_BRANCH}
+          git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"
         fi
