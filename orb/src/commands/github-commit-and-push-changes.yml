@@ -66,6 +66,8 @@ steps:
 
         cd "<< parameters.folder >>"
 
+        git pull
+
         # Stage changes first
         git add . -n  # Dry run to show what would be added
         git add .
@@ -77,14 +79,7 @@ steps:
         fi
 
         echo "Committing changes..."
-        git commit -m "Update - Gov Uploads"
-
-        # Now fetch and rebase
-        echo "Fetching latest changes..."
-        git fetch origin ${CIRCLE_BRANCH}
-
-        echo "Rebasing on latest changes..."
-        git rebase origin/${CIRCLE_BRANCH}
+        git commit -m "<< parameters.commit-message >>"
 
 
         SKIP_CI=""
