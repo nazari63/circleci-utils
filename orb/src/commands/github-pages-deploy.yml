@@ -12,14 +12,13 @@ parameters:
     type: boolean
     default: false
     description: "Whether to force push"
-  token-name:
-    type: env_var_name
-    default: GITHUB_APP_TOKEN
+
   condition:
     type: string
     default: "always"
     description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
+  - setup-circleci-utils-and-github-token
   - run:
       name: Deploy github pages
       command: |
@@ -27,6 +26,8 @@ steps:
           echo "Skipping command because condition is not met"
           exit 0
         fi
+
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
 
         # set up initial variables
         pages_branch="<< parameters.pages-branch >>"
@@ -49,7 +50,7 @@ steps:
         src_dir=$(mktemp -d)
         cd $src_dir
         git init
-        git remote add origin "https://x-access-token:${<< parameters.token-name >>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+        git remote add origin "https://x-access-token:${token}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
 
         if [ "<< parameters.force-push >>" = true ]; then
           # in case we are force pushing, we want a clean branch that we can push to

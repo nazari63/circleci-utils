@@ -2,9 +2,6 @@ description: >
   This command commit and push a folder change to a specific repo/branch
 parameters:
   github-token:
-    type: env_var_name
-    description: "The GitHub token to use for the GitHub API"
-    default: GITHUB_APP_TOKEN
   repo:
     type: string
     default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
@@ -37,6 +34,7 @@ parameters:
     default: "always"
     description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
+  - setup-circleci-utils-and-github-token
   - run:
       name: Commit and Push Changes
       command: |
@@ -44,6 +42,8 @@ steps:
           echo "Skipping command because condition is not met"
           exit 0
         fi
+
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH) 
 
         if [ -z "<< parameters.commit-username >>" ]; then
           # Get the username of the user that triggered the event
@@ -86,4 +86,4 @@ steps:
           SKIP_CI="[skip ci] "
         fi
 
-        git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"
+        git push "https://x-access-token:${token}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"

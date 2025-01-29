@@ -8,9 +8,6 @@ parameters:
   comment-id:
     type: string
     description: "The name of the environment variable to store the comment ID in"
-  token-name:
-    type: env_var_name
-    default: GITHUB_APP_TOKEN
   condition:
     type: string
     default: "always"
@@ -25,11 +22,12 @@ steps:
           exit 0
         fi
 
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
 
         if [ -n "<<parameters.comment-id>>" ]; then
             python $CIRCLECI_TOOLS_PATH delete-pr-comment \
-              --github-token "${<< parameters.token-name >>}" \
-              --repo "<< parameters.repo >>" \
-              --pr-number "<< parameters.pr-number >>" \
-              --comment-id "<< parameters.comment-id >>"
+                --github-token "${token}" \
+                --repo "<< parameters.repo >>" \
+                --pr-number "<< parameters.pr-number >>" \
+                --comment-id "<< parameters.comment-id >>"
         fi

@@ -1,0 +1,75 @@
+description: >
+  This command will take care to setup the circleci-utils. This will run only once per job.
+parameters:
+  branch:
+    type: string
+    default: "v0.5.0"
+    description: "The version of the circleci-utils to use"
+  private-key-str:
+    type: env_var_name
+    default: GITHUB_APP_KEY
+    description: "The GitHub App's private key"
+  app-id:
+    type: env_var_name
+    default: GITHUB_APP_ID
+    description: "The GitHub App ID"
+  repo:
+    type: string
+    description: "The repository to get the token for"
+    default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+  condition:
+    type: string
+    default: "always"
+    description: "The condition to run the command. 0 and always are considered true, everything else is false"
+steps:
+  - run:
+      name: Setup circleci-utils
+      command: |
+        if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
+          echo "Skipping command because condition is not met"
+          exit 0
+        fi
+
+        #only clone if the directory does not exist
+        if [ ! -d "/tmp/circleci-utils" ]; then
+          git clone --branch << parameters.branch >> --depth 1 https://github.com/ethereum-optimism/circleci-utils.git /tmp/circleci-utils
+          GITHUB_CLI_PATH="/tmp/circleci-utils/github_utility/github_cli"
+          CIRCLECI_TOOLS_PATH=$GITHUB_CLI_PATH/main.py
+          
+          cd $(dirname "$CIRCLECI_TOOLS_PATH")
+          pip install -r requirements.txt
+
+          echo "export CIRCLECI_TOOLS_PATH=$CIRCLECI_TOOLS_PATH" >> $BASH_ENV
+          
+        fi
+
+        cd $(dirname "$CIRCLECI_TOOLS_PATH")
+
+        # if SECRET_ACCESS_TOKEN_FILE_PATH is set, we are already done
+        if [ -f "$SECRET_ACCESS_TOKEN_FILE_PATH" ]; then
+          echo "Secret Access Token File is already set"
+          exit 0
+        fi
+
+        # we create a temp random file name to store the token in
+        SECRET_ACCESS_TOKEN_FILE_PATH=$(mktemp)
+
+        #check if the token is already set
+        if [ -f $SECRET_ACCESS_TOKEN_FILE_PATH ]; then
+          echo "Token already set in $SECRET_ACCESS_TOKEN_FILE_PATH"
+        else
+          echo "Token not set in $SECRET_ACCESS_TOKEN_FILE_PATH"
+          #get the token
+          token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
+          echo ${token} > $SECRET_ACCESS_TOKEN_FILE_PATH
+          
+          #if the token is not set, fail the build
+          if [ -z "${token}" ]; then
+            echo "Failed to get GitHub Access Token"
+            exit 1
+          else 
+            echo "Successfully got GitHub Access Token"
+          fi
+        
+        fi
+

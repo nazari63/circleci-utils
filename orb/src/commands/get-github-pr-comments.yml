@@ -10,9 +10,6 @@ parameters:
   user-type:
     type: string
     default: "Bot"
-  token-name:
-    type: env_var_name
-    default: GITHUB_APP_TOKEN
   output-comment-id:
     type: string
     default: COMMENT_ID
@@ -31,8 +28,10 @@ steps:
           exit 0
         fi
 
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
+
         COMMENT_ID=$( python $CIRCLECI_TOOLS_PATH get-pr-comments \
-          --github-token "${<< parameters.token-name >>}" \
+          --github-token "${token}" \
           --repo "<< parameters.repo >>" \
           --pr-number "<< parameters.pr-number >>" \
           --message-substring "<<parameters.message>>" \

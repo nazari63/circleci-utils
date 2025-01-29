@@ -1,10 +1,6 @@
 description: >
   This command will create an issue in the repository using the provided file.
 parameters:
-  github-token:
-    type: env_var_name
-    description: "The GitHub token to use for the GitHub API"
-    default: GITHUB_APP_TOKEN
   repo:
     type: string
     description: "The repository to create the issue in"
@@ -35,8 +31,10 @@ steps:
           exit 0
         fi
 
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
+
         python $CIRCLECI_TOOLS_PATH create-issue-from-file \
-          --github-token "${<< parameters.github-token >>}" \
+          --github-token "${token}" \
           --repo "<< parameters.repo >>" \
           --file-path "<< parameters.file-path >>" \
           --issue-title "<< parameters.issue-title >>" \
