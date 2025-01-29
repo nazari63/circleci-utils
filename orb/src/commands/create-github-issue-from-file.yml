@@ -22,7 +22,7 @@ parameters:
     default: "always"
     description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
-  - setup-circleci-utils
+  - setup-circleci-utils-and-github-token
   - run:
       name: Create issue from file
       command: |

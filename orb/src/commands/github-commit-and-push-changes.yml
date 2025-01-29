@@ -1,7 +1,6 @@
 description: >
   This command commit and push a folder change to a specific repo/branch
 parameters:
-  github-token:
   repo:
     type: string
     default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"

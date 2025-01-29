@@ -12,7 +12,6 @@ parameters:
     type: boolean
     default: false
     description: "Whether to force push"
-
   condition:
     type: string
     default: "always"
