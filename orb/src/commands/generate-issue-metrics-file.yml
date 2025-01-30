@@ -1,10 +1,6 @@
 description: >
   This command will run the issue-metrics tool to generate a markdown file with the metrics of the issues in the repository.
 parameters:
-  GH_TOKEN:
-    type: env_var_name
-    description: "The GitHub token to use for the GitHub API"
-    default: GITHUB_APP_TOKEN
   SEARCH_QUERY:
     description: "The search query to filter the issues"
     type: string
@@ -26,11 +22,14 @@ steps:
         if [ "<< parameters.condition >>" != "always" ] && [ "<< parameters.condition >>" != "0" ]; then
               echo "Skipping command because condition is not met"
               exit 0
-            fi
+        fi
 
-            if [ "$(docker ps -aq -f name=issue-metrics-run)" ]; then
-              docker rm -f issue-metrics-run
-            fi
+        if [ "$(docker ps -aq -f name=issue-metrics-run)" ]; then
+          docker rm -f issue-metrics-run
+        fi
 
-            docker run --name issue-metrics-run -e SEARCH_QUERY="<< parameters.SEARCH_QUERY >>" -e GH_TOKEN="${<< parameters.GH_TOKEN >>}" "<< parameters.docker-image >>"
-            docker cp issue-metrics-run:/action/workspace/issue_metrics.md << parameters.file-path >>
+        echo "Running issue-metrics tool with the following parameters:"
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
+
+        docker run --name issue-metrics-run -e SEARCH_QUERY="<< parameters.SEARCH_QUERY >>" -e GH_TOKEN="${token}" "<< parameters.docker-image >>"
+        docker cp issue-metrics-run:/action/workspace/issue_metrics.md << parameters.file-path >>
