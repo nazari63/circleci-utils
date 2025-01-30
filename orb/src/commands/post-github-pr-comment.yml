@@ -27,6 +27,7 @@ steps:
           exit 0
         fi
 
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
         COMMENT_OPTION=""
         if [ -n "<< parameters.comment-id >>" ]; then
           COMMENT_OPTION="--comment-id << parameters.comment-id >>"
