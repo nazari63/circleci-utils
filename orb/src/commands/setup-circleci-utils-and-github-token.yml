@@ -47,29 +47,26 @@ steps:
 
         # if SECRET_ACCESS_TOKEN_FILE_PATH is set, we are already done
         if [ -f "$SECRET_ACCESS_TOKEN_FILE_PATH" ]; then
-          echo "Secret Access Token File is already set"
+          echo "Secret Access Token File is already set in $SECRET_ACCESS_TOKEN_FILE_PATH"
           exit 0
         fi
 
         # we create a temp random file name to store the token in
         SECRET_ACCESS_TOKEN_FILE_PATH=$(mktemp)
+        echo "export SECRET_ACCESS_TOKEN_FILE_PATH=$SECRET_ACCESS_TOKEN_FILE_PATH" >> $BASH_ENV
 
-        #check if the token is already set
-        if [ -f $SECRET_ACCESS_TOKEN_FILE_PATH ]; then
-          echo "Token already set in $SECRET_ACCESS_TOKEN_FILE_PATH"
-        else
-          echo "Token not set in $SECRET_ACCESS_TOKEN_FILE_PATH"
-          #get the token
-          token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
-          echo ${token} > $SECRET_ACCESS_TOKEN_FILE_PATH
-          
-          #if the token is not set, fail the build
-          if [ -z "${token}" ]; then
-            echo "Failed to get GitHub Access Token"
-            exit 1
-          else 
-            echo "Successfully got GitHub Access Token"
-          fi
+
+        echo "Token not set in $SECRET_ACCESS_TOKEN_FILE_PATH"
+        #get the token
+        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
+        echo ${token} > $SECRET_ACCESS_TOKEN_FILE_PATH
         
+        #if the token is not set, fail the build
+        if [ -z "${token}" ]; then
+          echo "Failed to get GitHub Access Token"
+          exit 1
+        else 
+          echo "Successfully got GitHub Access Token"
         fi
+        
 

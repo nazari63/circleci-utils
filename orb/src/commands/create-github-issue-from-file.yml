@@ -4,6 +4,7 @@ parameters:
   repo:
     type: string
     description: "The repository to create the issue in"
+    default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
   file-path:
     type: string
     default: "./issue_metrics.md"

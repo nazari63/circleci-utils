@@ -25,7 +25,8 @@ steps:
           echo "Skipping command because condition is not met"
           exit 0
         fi
-
+        
+        echo "SECRET_ACCESS_TOKEN_FILE_PATH: $SECRET_ACCESS_TOKEN_FILE_PATH"
         token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
 
         # set up initial variables

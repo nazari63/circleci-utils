@@ -3,6 +3,8 @@ description: >
 parameters:
   repo:
     type: string
+    default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    description: "The repository to delete the comment from"
   pr-number:
     type: string
   comment-id:
