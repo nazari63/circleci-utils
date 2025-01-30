@@ -37,9 +37,20 @@ steps:
         SOURCE_REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
 
         USERNAME=${CIRCLE_USERNAME}
+        echo "USERNAME: $USERNAME"
+        if [ -z "$USERNAME" ]; then
+          echo "USERNAME is empty"
+          exit 0
+        fi
+
 
         # Extract the email from the user info
         ID=$(curl https://api.github.com/users/$USERNAME | jq -r '.id')
+        echo "ID: $ID"
+        if [ -z "$ID" ]; then
+          echo "ID is empty"
+          exit 0
+        fi
         USER_EMAIL="${ID}+${USERNAME}@users.noreply.github.com"
 
         # Git operations with committer's identity
