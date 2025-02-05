@@ -1,10 +1,6 @@
 description: >
   This command commit and push a folder change to a specific repo/branch
 parameters:
-  github-token:
-    type: env_var_name
-    description: "The GitHub token to use for the GitHub API"
-    default: GITHUB_APP_TOKEN
   repo:
     type: string
     default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
@@ -13,9 +9,9 @@ parameters:
     type: string
     default: $CIRCLE_BRANCH
     description: "Branch where to commit to"
-  folder:
+  path:
     type: string
-    description: "Folder to commit"
+    description: "Path to the folder to commit, can be a directory or a file"
   commit-message:
     type: string
     description: "Message to use"
@@ -37,6 +33,7 @@ parameters:
     default: "always"
     description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
+  - setup-circleci-utils-and-github-token
   - run:
       name: Commit and Push Changes
       command: |
@@ -45,11 +42,19 @@ steps:
           exit 0
         fi
 
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH) 
+
         if [ -z "<< parameters.commit-username >>" ]; then
           # Get the username of the user that triggered the event
           USERNAME=${CIRCLE_USERNAME}
         else
           USERNAME="<< parameters.commit-username >>"
+        fi
+
+        echo "USERNAME: $USERNAME"
+        if [ -z "$USERNAME" ]; then
+          echo "USERNAME is empty"
+          exit 0
         fi
 
         if [ -z "<< parameters.commit-email >>" ]; then
@@ -60,13 +65,37 @@ steps:
           USER_EMAIL="<< parameters.commit-email >>"
         fi
 
+        if [ -z "$USER_EMAIL" ]; then
+          echo "USER_EMAIL is empty"
+          exit 0
+        fi
+
+        echo "USER_EMAIL: $USER_EMAIL"
+
         # Git operations with committer's identity
         git config --global user.name "${USERNAME}"
         git config --global user.email "${USER_EMAIL}"
 
-        cd "<< parameters.folder >>"
+        #get absolute path of the path
+        AbsolutePath=$(realpath "single_file.txt")
 
-        git pull
+        # create a temp directory to work in
+        TempDir=$(mktemp -d)
+        echo "TempDir: ${TempDir}"
+        cd "${TempDir}"
+
+        # Initialize git repository
+        git init
+
+        # Set remote and fetch all content
+        git remote add origin "https://x-access-token:${token}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+        git fetch origin
+
+        # Set up tracking branch
+        git checkout -b "${CIRCLE_BRANCH}" "origin/${CIRCLE_BRANCH}"
+
+        # copy the path to the temp directory
+        cp -r "${AbsolutePath}" ./
 
         # Stage changes first
         git add . -n  # Dry run to show what would be added
@@ -78,12 +107,15 @@ steps:
           exit 0
         fi
 
-        echo "Committing changes..."
-        git commit -m "${SKIP_CI}<< parameters.commit-message >>"
-
         SKIP_CI=""
-        if [ "<< parameters.skip-ci >>" = true ]; then
+        if [ "false" = true ]; then
           SKIP_CI="[skip ci] "
         fi
 
-        git push "https://x-access-token:${<<parameters.github-token>>}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" "<< parameters.branch >>"
+        echo "Committing changes..."
+        git commit -m "${SKIP_CI}Automated commit for single file $(date)"
+
+        git push origin "$CIRCLE_BRANCH"
+
+        # clean up the temp directory
+        rm -rf "${TempDir}"

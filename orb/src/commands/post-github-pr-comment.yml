@@ -3,6 +3,8 @@ description: >
 parameters:
   repo:
     type: string
+    default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    description: "The repository to post the comment to"
   pr-number:
     type: string
   comment-id:
@@ -11,15 +13,12 @@ parameters:
   comment-body:
     type: string
     description: "The body of the comment to post"
-  token-name:
-    type: env_var_name
-    default: GITHUB_APP_TOKEN
   condition:
     type: string
     default: "always"
     description: "The condition to run the command. 0 and always are considered true, everything else is false"
 steps:
-  - setup-circleci-utils
+  - setup-circleci-utils-and-github-token
   - run:
       name: Post PR Comments
       command: |
@@ -28,13 +27,14 @@ steps:
           exit 0
         fi
 
+        token=$(cat $SECRET_ACCESS_TOKEN_FILE_PATH)
         COMMENT_OPTION=""
         if [ -n "<< parameters.comment-id >>" ]; then
           COMMENT_OPTION="--comment-id << parameters.comment-id >>"
         fi
 
         python $CIRCLECI_TOOLS_PATH post-pr-comment \
-              --github-token "${<< parameters.token-name >>}" \
+              --github-token "${token}" \
               --repo "<< parameters.repo >>" \
               --pr-number "<< parameters.pr-number >>" \
               --comment-body "<< parameters.comment-body >>" \

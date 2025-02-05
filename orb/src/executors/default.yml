@@ -1,5 +1,5 @@
 description: >
   The orb assumes that it will run on an Ubuntu 22.04 machine
 machine:
-  image: ubuntu-2204:current
+  image: ubuntu-2204:2024.08.1
 resource_class: medium
