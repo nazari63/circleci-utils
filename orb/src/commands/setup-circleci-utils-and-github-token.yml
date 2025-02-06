@@ -13,6 +13,10 @@ parameters:
     type: env_var_name
     default: GITHUB_APP_ID
     description: "The GitHub App ID"
+  github-token:
+    type: env_var_name
+    default: GITHUB_TOKEN_GOVERNANCE
+    description: "The GitHub token"
   github-app-repo:
     type: string
     description: "The repository to get the token for"
@@ -58,7 +62,17 @@ steps:
 
         echo "Token not set in $SECRET_ACCESS_TOKEN_FILE_PATH"
         #get the token
-        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.github-app-repo >>")
+
+        # we give priority to the github-token parameter if set
+        
+        if [ -n "${<< parameters.github-token >>}" ]; then
+          echo "Using github-token parameter"
+          token="${<< parameters.github-token >>}"
+        else
+          echo "Using private-key-str parameter"
+          token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.github-app-repo >>")
+        fi
+
         echo ${token} > $SECRET_ACCESS_TOKEN_FILE_PATH
         
         #if the token is not set, fail the build
