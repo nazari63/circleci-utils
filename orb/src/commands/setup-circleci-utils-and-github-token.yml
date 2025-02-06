@@ -1,7 +1,7 @@
 description: >
   This command will take care to setup the circleci-utils. This will run only once per job.
 parameters:
-  branch:
+  circleci-utils-tag:
     type: string
     default: "v0.5.0"
     description: "The version of the circleci-utils to use"
@@ -13,7 +13,7 @@ parameters:
     type: env_var_name
     default: GITHUB_APP_ID
     description: "The GitHub App ID"
-  repo:
+  github-app-repo:
     type: string
     description: "The repository to get the token for"
     default: "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
@@ -32,7 +32,7 @@ steps:
 
         #only clone if the directory does not exist
         if [ ! -d "/tmp/circleci-utils" ]; then
-          git clone --branch << parameters.branch >> --depth 1 https://github.com/ethereum-optimism/circleci-utils.git /tmp/circleci-utils
+          git clone --branch << parameters.circleci-utils-tag >> --depth 1 https://github.com/ethereum-optimism/circleci-utils.git /tmp/circleci-utils
           GITHUB_CLI_PATH="/tmp/circleci-utils/github_utility/github_cli"
           CIRCLECI_TOOLS_PATH=$GITHUB_CLI_PATH/main.py
           
@@ -58,7 +58,7 @@ steps:
 
         echo "Token not set in $SECRET_ACCESS_TOKEN_FILE_PATH"
         #get the token
-        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.repo >>")
+        token=$(python $CIRCLECI_TOOLS_PATH get-github-access-token --private-key-str="${<< parameters.private-key-str >>}" --app-id="${<< parameters.app-id >>}" --repo "<< parameters.github-app-repo >>")
         echo ${token} > $SECRET_ACCESS_TOKEN_FILE_PATH
         
         #if the token is not set, fail the build

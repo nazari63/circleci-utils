@@ -1,0 +1,15 @@
+description: >
+  Sets up GitHub token for use in subsequent jobs using CircleCI utils
+
+executor: default
+
+steps:
+  - setup-circleci-utils-and-github-token
+  - run:
+      name: Set GitHub Token
+      command: |
+        cp $SECRET_ACCESS_TOKEN_FILE_PATH circleci-utils-github-token.secret.never.print
+  - persist_to_workspace:
+      root: .
+      paths:
+        - circleci-utils-github-token.secret.never.print
