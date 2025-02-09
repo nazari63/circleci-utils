@@ -77,7 +77,7 @@ steps:
         git config --global user.email "${USER_EMAIL}"
 
         #get absolute path of the path
-        AbsolutePath=$(realpath "single_file.txt")
+        AbsolutePath=$(realpath "<< parameters.path >>")
 
         # create a temp directory to work in
         TempDir=$(mktemp -d)
