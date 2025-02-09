@@ -12,6 +12,7 @@ parameters:
   path:
     type: string
     description: "Path to the folder to commit, can be a directory or a file"
+    default: "."
   commit-message:
     type: string
     description: "Message to use"
@@ -78,28 +79,34 @@ steps:
 
         #get absolute path of the path
         AbsolutePath=$(realpath "<< parameters.path >>")
+        echo "AbsolutePath: ${AbsolutePath}"
 
-        # create a temp directory to work in
-        TempDir=$(mktemp -d)
-        echo "TempDir: ${TempDir}"
-        cd "${TempDir}"
+        
+        # cd into the directory of the path only if it's a file
+        if [ -f "${AbsolutePath}" ]; then
+          cd "$(dirname "${AbsolutePath}")"
+          echo "cd into the directory of the path only if it's a file"
+        else
+          echo "cd into the directory of the path"  
+          cd "$(dirname "${AbsolutePath}")"
+        fi
 
-        # Initialize git repository
-        git init
+        
 
-        # Set remote and fetch all content
-        git remote add origin "https://x-access-token:${token}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
-        git fetch origin
+        # Update the remote URL to use the token
+        git remote set-url origin "https://x-access-token:${token}@github.com/<< parameters.repo >>.git"
+        
+        # Switch to the target branch first
+        echo "Switching to branch << parameters.branch >>..."
+        git checkout "<< parameters.branch >>" || git checkout -b "<< parameters.branch >>"
 
-        # Set up tracking branch
-        git checkout -b "${CIRCLE_BRANCH}" "origin/${CIRCLE_BRANCH}"
+        # Pull latest changes from the branch
+        echo "Pulling latest changes..."
+        git pull origin "<< parameters.branch >>"
 
-        # copy the path to the temp directory
-        cp -r "${AbsolutePath}" ./
-
-        # Stage changes first
-        git add . -n  # Dry run to show what would be added
-        git add .
+        # Stage the specified path
+        git add "${AbsolutePath}" -n  # Dry run to show what would be added
+        git add "${AbsolutePath}"
 
         # Create commit if there are changes
         if git diff --staged --quiet; then
@@ -115,7 +122,6 @@ steps:
         echo "Committing changes..."
         git commit -m "${SKIP_CI}${parameters.commit-message}"
 
-        git push origin "${CIRCLE_BRANCH}"
+        echo "Pushing changes..."
+        git push origin "<< parameters.branch >>"
 
-        # clean up the temp directory
-        rm -rf "${TempDir}"
