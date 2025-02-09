@@ -108,14 +108,14 @@ steps:
         fi
 
         SKIP_CI=""
-        if [ "false" = true ]; then
+        if [ "<< parameters.skip-ci >>" = true ]; then
           SKIP_CI="[skip ci] "
         fi
 
         echo "Committing changes..."
-        git commit -m "${SKIP_CI}Automated commit for single file $(date)"
+        git commit -m "${SKIP_CI}${parameters.commit-message}"
 
-        git push origin "$CIRCLE_BRANCH"
+        git push origin "${CIRCLE_BRANCH}"
 
         # clean up the temp directory
         rm -rf "${TempDir}"
